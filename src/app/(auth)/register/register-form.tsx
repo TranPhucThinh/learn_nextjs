@@ -36,7 +36,7 @@ function RegisterForm() {
         },
         body: JSON.stringify(values),
       }
-    ).then((result) => result.json())
+    ).then((res) => res.json())
 
     console.log(result)
   }
