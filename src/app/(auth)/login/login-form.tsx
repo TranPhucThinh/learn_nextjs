@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
+import { useState } from 'react'
 
 import authApiRequest from '@/apiRequests/auth'
 import { Button } from '@/components/ui/button'
@@ -15,10 +16,12 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
+import { handleErrorApi } from '@/lib/utils'
 import { LoginBody, LoginBodyType } from '@/schemaValidations/auth.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 function LoginForm() {
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const { toast } = useToast()
   const router = useRouter()
 
@@ -31,6 +34,7 @@ function LoginForm() {
   })
 
   async function onSubmit(values: LoginBodyType) {
+    setIsLoading(true)
     try {
       const result = await authApiRequest.login(values)
       toast({
@@ -43,26 +47,12 @@ function LoginForm() {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      const errors = error.payload.errors as {
-        field: string
-        message: string
-      }[]
-      const status = error.status as number
-
-      if (status === 422) {
-        errors.forEach((error) => {
-          form.setError(error.field as 'email' | 'password', {
-            type: 'server',
-            message: error.message,
-          })
-        })
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Lỗi',
-          description: error.payload.message,
-        })
-      }
+      handleErrorApi({
+        error,
+        setError: form.setError,
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -99,7 +89,7 @@ function LoginForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="!mt-8 w-full">
+        <Button disabled={isLoading} type="submit" className="!mt-8 w-full">
           Đăng nhập
         </Button>
       </form>
