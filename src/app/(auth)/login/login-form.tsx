@@ -1,6 +1,9 @@
 'use client'
 
-import { useAppContext } from '@/app/AppProvider'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+
+import authApiRequest from '@/apiRequests/auth'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -11,15 +14,13 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import envConfig from '@/config'
 import { useToast } from '@/hooks/use-toast'
 import { LoginBody, LoginBodyType } from '@/schemaValidations/auth.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
 
 function LoginForm() {
   const { toast } = useToast()
-  const { setSessionToken } = useAppContext()
+  const router = useRouter()
 
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBody),
@@ -31,50 +32,14 @@ function LoginForm() {
 
   async function onSubmit(values: LoginBodyType) {
     try {
-      const result = await fetch(
-        `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/login`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(values),
-        }
-      ).then(async (res) => {
-        const payload = await res.json()
-        const data = {
-          status: res.status,
-          payload,
-        }
-
-        if (!res.ok) {
-          throw data
-        }
-        return data
-      })
+      const result = await authApiRequest.login(values)
       toast({
         description: result.payload.message,
       })
-
-      const resultFromNextServer = await fetch('/api/auth', {
-        method: 'POST',
-        body: JSON.stringify(result),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).then(async (res) => {
-        const payload = await res.json()
-        const data = {
-          status: res.status,
-          payload,
-        }
-
-        if (!res.ok) {
-          throw data
-        }
-        return data
+      await authApiRequest.auth({
+        sessionToken: result.payload.data.token,
       })
-      setSessionToken(resultFromNextServer.payload.data.token)
+      router.push('/me')
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -128,7 +93,7 @@ function LoginForm() {
             <FormItem>
               <FormLabel>Mật khẩu</FormLabel>
               <FormControl>
-                <Input placeholder="shadcn" {...field} />
+                <Input type="password" placeholder="shadcn" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

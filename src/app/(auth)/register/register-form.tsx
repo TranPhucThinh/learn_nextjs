@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+
+import authApiRequest from '@/apiRequests/auth'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -10,12 +14,14 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import envConfig from '@/config'
+import { useToast } from '@/hooks/use-toast'
 import { RegisterBody, RegisterBodyType } from '@/schemaValidations/auth.schema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
 
 function RegisterForm() {
+  const { toast } = useToast()
+  const router = useRouter()
+
   const form = useForm<RegisterBodyType>({
     resolver: zodResolver(RegisterBody),
     defaultValues: {
@@ -27,18 +33,39 @@ function RegisterForm() {
   })
 
   async function onSubmit(values: RegisterBodyType) {
-    const result = await fetch(
-      `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/register`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      }
-    ).then((res) => res.json())
+    try {
+      const result = await authApiRequest.register(values)
+      toast({
+        description: result.payload.message,
+      })
+      await authApiRequest.auth({
+        sessionToken: result.payload.data.token,
+      })
+      router.push('/me')
 
-    console.log(result)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      const errors = error.payload.errors as {
+        field: string
+        message: string
+      }[]
+      const status = error.status as number
+
+      if (status === 422) {
+        errors.forEach((error) => {
+          form.setError(error.field as 'email' | 'password', {
+            type: 'server',
+            message: error.message,
+          })
+        })
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Lỗi',
+          description: error.payload.message,
+        })
+      }
+    }
   }
 
   return (
@@ -81,7 +108,7 @@ function RegisterForm() {
             <FormItem>
               <FormLabel>Mật khẩu</FormLabel>
               <FormControl>
-                <Input placeholder="shadcn" {...field} />
+                <Input type="password" placeholder="shadcn" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -94,7 +121,7 @@ function RegisterForm() {
             <FormItem>
               <FormLabel>Nhập lại mật khẩu</FormLabel>
               <FormControl>
-                <Input placeholder="shadcn" {...field} />
+                <Input type="password" placeholder="shadcn" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
