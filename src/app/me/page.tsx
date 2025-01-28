@@ -4,7 +4,6 @@ import Profile from './profile'
 
 const MeProfile = async () => {
   const cookieStore = await cookies()
-
   const sessionToken = cookieStore.get('sessionToken')
 
   const result = await accountApiRequest.me(sessionToken?.value ?? '')
