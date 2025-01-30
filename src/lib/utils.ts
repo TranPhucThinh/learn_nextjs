@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { toast } from '@/hooks/use-toast'
 import { clsx, type ClassValue } from 'clsx'
+import { decode } from 'jsonwebtoken'
 import { UseFormSetError } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import { EntityError } from './http'
-import { toast } from '@/hooks/use-toast'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -40,4 +41,8 @@ export const handleErrorApi = ({
  */
 export const normalizePath = (path: string) => {
   return path.startsWith('/') ? path.slice(1) : path
+}
+
+export const decodeJWT = <Payload = any>(token: string) => {
+  return decode(token) as Payload
 }
