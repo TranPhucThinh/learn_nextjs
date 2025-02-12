@@ -42,6 +42,7 @@ function LoginForm() {
       })
       await authApiRequest.auth({
         sessionToken: result.payload.data.token,
+        expiresAt: result.payload.data.expiresAt,
       })
       router.push('/me')
 
