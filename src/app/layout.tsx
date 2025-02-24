@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/toaster'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { cookies } from 'next/headers'
-import AppProvider from './AppProvider'
+import AppProvider from './app-provider'
 import './globals.css'
 
 const inter = Inter({ subsets: ['vietnamese'] })

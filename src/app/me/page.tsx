@@ -1,6 +1,6 @@
 import accountApiRequest from '@/apiRequests/account'
 import { cookies } from 'next/headers'
-import Profile from './profile'
+import ProfileForm from './profile-form'
 
 const MeProfile = async () => {
   const cookieStore = await cookies()
@@ -11,8 +11,7 @@ const MeProfile = async () => {
   return (
     <div>
       <h1>Profile</h1>
-      <div>Xin chào {result.payload.data.name}</div>
-      {/* <Profile /> */}
+      <ProfileForm profile={result.payload.data} />
     </div>
   )
 }
